@@ -135,8 +135,94 @@ public:
 					CleanedEntries.push_back(Entries[i]);
 				}
 			}
+			
 		}
-		
+
+		struct EntryBlabla {
+			std::filesystem::directory_entry entry;
+			int index;
+		};
+
+		std::vector<EntryBlabla> EntrySorted;
+
+		auto firstComp = CleanedEntries[0].path().wstring();
+
+		size_t OffsetStart = 0;
+
+		wchar_t EndCharacter;				
+		bool FoundComparison = false;
+
+		for (size_t i = 1; i < CleanedEntries.size(); i++)
+		{
+			auto NextComp = CleanedEntries[i].path().wstring();
+
+			if (firstComp.size() == NextComp.size()) {
+
+				bool EndOffset = false;
+
+				
+				size_t OffsetEnd = 0;
+
+				for (size_t i = 0; i < firstComp.size(); i++)
+				{
+					if (firstComp[i] != NextComp[i]) {
+						if (!EndOffset) {
+							EndOffset = true;
+							OffsetStart = i;
+						}
+					}
+
+					if (EndOffset) {
+						if (firstComp[i] == NextComp[i]) {
+							FoundComparison = true;
+							EndCharacter = firstComp[i];
+							break;
+						}
+					}
+				}
+
+				if (FoundComparison) {
+					std::cout << "\n Found Comparison\n";
+				}
+
+				break;
+			}
+		}
+
+		if (FoundComparison) {
+			for (size_t i = 0; i < CleanedEntries.size(); i++)
+			{
+				auto path = CleanedEntries[i].path().wstring();
+
+				std::string Numb = "";
+
+				for (size_t i = OffsetStart; i < path.size(); i++)
+				{
+					auto CurrentChar = path[i];
+
+					if (CurrentChar == EndCharacter || !std::isdigit(CurrentChar)) {
+						break;
+					}
+					
+					Numb += CurrentChar;
+				}
+
+				EntrySorted.push_back({ CleanedEntries[i], std::stoi(Numb) });
+			}
+
+			std::sort(EntrySorted.begin(), EntrySorted.end(), [](const EntryBlabla& a, const EntryBlabla& b) {
+				return a.index < b.index;
+				});
+
+			for (size_t i = 0; i < EntrySorted.size(); i++)
+			{
+				CleanedEntries[i] = EntrySorted[i].entry;
+			}
+		}
+		else
+		{
+			CleanedEntries = Entries;
+		}
 	}
 
 	void CreateData(std::wstring FolderName) {
@@ -165,6 +251,7 @@ public:
 						if (FileOpened.is_open()) {
 							Numbs.push_back(i);
 							FileOpened << "#pragma once\n";
+							FileOpened << "//Original Path" << CleanedEntries[i].path().string() << "\n";
 							FileOpened << "unsigned char rawData" << std::to_string(i) << "[" << ByteNumb << "] = {";
 							for (size_t j = 0; j < ByteNumb; j++) {
 								if (j % 11 == 0) {
