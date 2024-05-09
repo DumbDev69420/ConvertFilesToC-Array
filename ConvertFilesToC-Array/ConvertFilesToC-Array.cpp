@@ -251,7 +251,7 @@ public:
 						if (FileOpened.is_open()) {
 							Numbs.push_back(i);
 							FileOpened << "#pragma once\n";
-							FileOpened << "//Original Path" << CleanedEntries[i].path().string() << "\n";
+							//FileOpened << "//Original Path" << CleanedEntries[i].path().string() << "\n";
 							FileOpened << "unsigned char rawData" << std::to_string(i) << "[" << ByteNumb << "] = {";
 							for (size_t j = 0; j < ByteNumb; j++) {
 								if (j % 11 == 0) {
@@ -280,7 +280,10 @@ public:
 
 			for (size_t i = 0; i < Paths.size(); i++)
 			{
-				ResultFile << LR"(#include ")" << Paths[i] << L'"' << L"\n";
+				if (auto OffsetLastDir = Paths[i].find_last_of(LR"(\)"); OffsetLastDir != std::wstring::npos) {
+					ResultFile << LR"(#include ")" << Paths[i].substr(OffsetLastDir + 1) << L'"' << L"\n";
+				}
+				
 			}
 
 			ResultFile << L"\n  struct ByteData {\n  unsigned char* DataPointer;\n  size_t ByteSize;\n};";
